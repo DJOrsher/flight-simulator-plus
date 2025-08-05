@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+        
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background-color: white;
+        }
+        
+        #crosshair::before {
+            width: 2px;
+            height: 20px;
+            left: 9px;
+            top: 0;
+        }
+        
+        #crosshair::after {
+            width: 20px;
+            height: 2px;
+            left: 0;
+            top: 9px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="info">
+            <h3>Three.js Simulator</h3>
+            <p><strong>Controls:</strong></p>
+            <p>WASD or Arrow Keys - Move</p>
+            <p>Mouse - Look around</p>
+            <p>E near aircraft - Board</p>
+            <p>Click to lock mouse</p>
+        </div>
+        <div id="crosshair"></div>
+    </div>
+    
+    <!-- Three.js from CDN -->
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script>
+        // Check if Three.js loaded
+        window.addEventListener('load', () => {
+            if (typeof THREE === 'undefined') {
+                console.error('Three.js failed to load from CDN');
+                document.getElementById('info').innerHTML = '<h3>Error: Three.js failed to load</h3><p>Please check your internet connection.</p>';
+            } else {
+                console.log('Three.js loaded successfully');
+            }
+        });
+    </script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
