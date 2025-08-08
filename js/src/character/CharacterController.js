@@ -46,6 +46,11 @@ export class CharacterController {
     update(deltaTime) {
         const controls = this.input.getMovementControls();
         
+        // Debug input detection (disabled to reduce spam)
+        // if (controls.forward || controls.backward || controls.left || controls.right) {
+        //     console.log('Input controls:', controls);
+        // }
+        
         // Calculate movement
         const movement = this.calculateMovement(controls, deltaTime);
         
@@ -53,6 +58,10 @@ export class CharacterController {
         if (movement.length() > 0) {
             this.character.move(movement);
             this.constrainToWorldBounds();
+            
+            // Rotate character to face movement direction (so camera sees back)
+            this.character.setRotation(this.yaw);
+            
             this.character.updateAnimation(true, deltaTime);
         } else {
             this.character.updateAnimation(false, deltaTime);
@@ -61,7 +70,8 @@ export class CharacterController {
         // Update camera
         this.camera.updateWalkingPosition(
             this.character.getPosition(), 
-            this.yaw
+            this.yaw,
+            this.pitch
         );
     }
     
@@ -97,6 +107,18 @@ export class CharacterController {
             (forwardDir.z * moveForward + rightDir.z * moveRight) * this.moveSpeed
         );
         
+        // Debug output disabled - movement fixed
+        // if (moveForward !== 0 || moveRight !== 0) {
+        //     console.log('Movement debug:', {
+        //         yaw: this.yaw,
+        //         yawDegrees: (this.yaw * 180 / Math.PI).toFixed(1),
+        //         forwardDir,
+        //         rightDir,
+        //         moveForward,
+        //         moveRight
+        //     });
+        // }
+        
         return movement;
     }
     
@@ -106,14 +128,24 @@ export class CharacterController {
      * @param {number} deltaY - Mouse Y movement
      */
     handleMouseLook(deltaX, deltaY) {
-        this.yaw -= deltaX * this.mouseSensitivity;
-        this.pitch -= deltaY * this.mouseSensitivity;
+        const oldYaw = this.yaw;
+        this.yaw -= deltaX * this.mouseSensitivity;  // Fixed: reversed horizontal
+        this.pitch += deltaY * this.mouseSensitivity; // Fixed: reversed vertical (+ so up mouse = look up)
         
         // Constrain pitch
         this.pitch = MathUtils.clamp(this.pitch, -Math.PI / 2, Math.PI / 2);
         
         // Normalize yaw
         this.yaw = MathUtils.normalizeAngle(this.yaw);
+        
+        // Debug yaw changes disabled - movement fixed
+        // if (Math.abs(deltaX) > 0) {
+        //     console.log('Yaw changed:', {
+        //         oldYaw: (oldYaw * 180 / Math.PI).toFixed(1),
+        //         newYaw: (this.yaw * 180 / Math.PI).toFixed(1),
+        //         deltaX: deltaX.toFixed(3)
+        //     });
+        // }
         
         // Reset mouse delta after processing
         this.input.resetMouseDelta();

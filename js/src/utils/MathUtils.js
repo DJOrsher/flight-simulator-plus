@@ -81,8 +81,8 @@ export function angleToTarget(fromX, fromZ, toX, toZ) {
  */
 export function forwardDirection(yaw) {
     return {
-        x: Math.cos(yaw),
-        z: -Math.sin(yaw)
+        x: -Math.sin(yaw),  // Fixed: 90 degree offset
+        z: -Math.cos(yaw)
     };
 }
 
@@ -93,8 +93,8 @@ export function forwardDirection(yaw) {
  */
 export function rightDirection(yaw) {
     return {
-        x: -Math.sin(yaw),
-        z: -Math.cos(yaw)
+        x: Math.cos(yaw),   // Fixed: reversed left/right
+        z: -Math.sin(yaw)
     };
 }
 

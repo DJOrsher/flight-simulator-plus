@@ -13,14 +13,12 @@ export class Environment {
         this.buildings = {};
         this.terrain = {};
         this.objects = [];
-        
-        this.init();
     }
     
     /**
      * Initialize all environment elements
      */
-    init() {
+    async init() {
         this.createAirfield();
         this.createBuildings();
         this.createTerrain();
@@ -44,7 +42,7 @@ export class Environment {
         // Main runway
         const runwayGeometry = new THREE.PlaneGeometry(200, 10);
         const runwayMaterial = new THREE.MeshLambertMaterial({ 
-            color: COLORS.RUNWAY || 0x404040 
+            color: COLORS.RUNWAY_GRAY || 0x404040 
         });
         
         this.airfield.runway = new THREE.Mesh(runwayGeometry, runwayMaterial);
@@ -88,7 +86,7 @@ export class Environment {
      */
     createTaxiways() {
         const taxiwayMaterial = new THREE.MeshLambertMaterial({ 
-            color: COLORS.TAXIWAY || 0x505050 
+            color: COLORS.TAXIWAY_GRAY || 0x505050 
         });
         
         // Main taxiway parallel to runway
@@ -130,7 +128,7 @@ export class Environment {
      */
     createParkingAreas() {
         const parkingMaterial = new THREE.MeshLambertMaterial({ 
-            color: COLORS.PARKING || 0x606060 
+            color: COLORS.CONCRETE || 0x606060 
         });
         
         // General Aviation parking
@@ -284,7 +282,7 @@ export class Environment {
         // Tower base
         const baseGeometry = new THREE.CylinderGeometry(4, 6, 20, 8);
         const baseMaterial = new THREE.MeshLambertMaterial({ 
-            color: COLORS.BUILDING || 0x888888 
+            color: COLORS.CONCRETE || 0x888888 
         });
         const base = new THREE.Mesh(baseGeometry, baseMaterial);
         base.position.y = 10;
@@ -364,7 +362,7 @@ export class Environment {
         // Main structure
         const structureGeometry = new THREE.BoxGeometry(25, 12, 20);
         const structureMaterial = new THREE.MeshLambertMaterial({ 
-            color: COLORS.HANGAR || 0x777777 
+            color: COLORS.CONCRETE || 0x777777 
         });
         const structure = new THREE.Mesh(structureGeometry, structureMaterial);
         structure.position.y = 6;
@@ -404,7 +402,7 @@ export class Environment {
         // Main terminal
         const mainGeometry = new THREE.BoxGeometry(40, 8, 15);
         const mainMaterial = new THREE.MeshLambertMaterial({ 
-            color: COLORS.TERMINAL || 0x999999 
+            color: COLORS.CONCRETE || 0x999999 
         });
         const main = new THREE.Mesh(mainGeometry, mainMaterial);
         main.position.y = 4;
@@ -438,7 +436,7 @@ export class Environment {
         hillPositions.forEach((hill, index) => {
             const hillGeometry = new THREE.SphereGeometry(80, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
             const hillMaterial = new THREE.MeshLambertMaterial({ 
-                color: COLORS.HILL || 0x2d5016 
+                color: COLORS.GRASS_GREEN || 0x2d5016 
             });
             const hillMesh = new THREE.Mesh(hillGeometry, hillMaterial);
             hillMesh.position.set(hill.x, hill.height / 2, hill.z);

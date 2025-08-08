@@ -29,7 +29,16 @@ export class Scene {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        document.body.appendChild(this.renderer.domElement);
+        
+        // Append to container div instead of body
+        const container = document.getElementById('container');
+        if (container) {
+            container.appendChild(this.renderer.domElement);
+            console.log('Renderer canvas added to #container');
+        } else {
+            document.body.appendChild(this.renderer.domElement);
+            console.warn('Container not found, appending to body');
+        }
         
         // Setup lighting
         this.setupLighting();

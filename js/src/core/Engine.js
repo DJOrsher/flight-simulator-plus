@@ -77,6 +77,7 @@ export class Engine {
             console.log('UIManager initialized');
             
             this.environment = new Environment(this.scene.getScene());
+            await this.environment.init();
             console.log('Environment initialized');
             
             this.character = new Character();

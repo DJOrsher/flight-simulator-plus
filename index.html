@@ -3,93 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js Simulator</title>
+    <title>Refactored Flight Simulator</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #000;
             font-family: Arial, sans-serif;
+            background: #000;
         }
         
         #container {
+            position: relative;
             width: 100vw;
             height: 100vh;
-            position: relative;
         }
         
         #info {
             position: absolute;
             top: 10px;
             left: 10px;
+            background: rgba(0, 0, 0, 0.8);
             color: white;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 350px;
             z-index: 100;
+            font-size: 14px;
+            line-height: 1.4;
         }
         
-        #crosshair {
+        #info h3 {
+            margin: 0 0 10px 0;
+            color: #87ceeb;
+        }
+        
+        #info p {
+            margin: 5px 0;
+        }
+        
+        #refactor-notice {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            pointer-events: none;
-            z-index: 50;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 100, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 100;
+            font-size: 12px;
         }
         
-        #crosshair::before,
-        #crosshair::after {
-            content: '';
-            position: absolute;
-            background-color: white;
+        .error {
+            color: #ff6b6b;
         }
         
-        #crosshair::before {
-            width: 2px;
-            height: 20px;
-            left: 9px;
-            top: 0;
+        .warning {
+            color: #feca57;
         }
         
-        #crosshair::after {
-            width: 20px;
-            height: 2px;
-            left: 0;
-            top: 9px;
+        .success {
+            color: #48dbfb;
         }
     </style>
 </head>
 <body>
     <div id="container">
         <div id="info">
-            <h3>Three.js Simulator</h3>
-            <p><strong>Controls:</strong></p>
-            <p>WASD or Arrow Keys - Move</p>
-            <p>Mouse - Look around</p>
-            <p>E near aircraft - Board</p>
-            <p>Click to lock mouse</p>
+            <h3>Loading Refactored Simulator...</h3>
+            <p>Initializing modular architecture...</p>
         </div>
-        <div id="crosshair"></div>
+        
+        <div id="refactor-notice">
+            <strong>🔧 Refactored Version</strong><br>
+            Modular Architecture<br>
+            2490 → ~300 lines per module<br>
+            <span style="color: #90EE90;">v2.3.0</span>
+        </div>
     </div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Three.js from CDN -->
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <!-- Note: ES6 modules require a web server to work properly -->
+    <!-- For local development, use: python -m http.server or npx serve -->
+    <script type="module" src="js/main.js"></script>
+    
     <script>
-        // Check if Three.js loaded
-        window.addEventListener('load', () => {
-            if (typeof THREE === 'undefined') {
-                console.error('Three.js failed to load from CDN');
-                document.getElementById('info').innerHTML = '<h3>Error: Three.js failed to load</h3><p>Please check your internet connection.</p>';
-            } else {
-                console.log('Three.js loaded successfully');
+        // Fallback for environments that don't support ES6 modules
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('module')) {
+                const infoElement = document.getElementById('info');
+                if (infoElement) {
+                    infoElement.innerHTML = `
+                        <h3 class="error">Module Loading Error</h3>
+                        <p>ES6 modules require a web server to run.</p>
+                        <p><strong>Solutions:</strong></p>
+                        <ul>
+                            <li>Use: <code>python -m http.server</code></li>
+                            <li>Use: <code>npx serve</code></li>
+                            <li>Use: <code>php -S localhost:8000</code></li>
+                            <li>Or open the original <a href="index.html" style="color: #87ceeb;">index.html</a></li>
+                        </ul>
+                        <p class="warning">The refactored code is functional but requires proper module loading.</p>
+                    `;
+                }
             }
-        });
+        }, true);
     </script>
-    <script src="js/main.js"></script>
 </body>
-</html> 
+</html>

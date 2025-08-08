@@ -65,26 +65,30 @@ export class Camera {
      * Update walking camera position
      * @param {THREE.Vector3} characterPosition - Character position
      * @param {number} yaw - Character yaw rotation
+     * @param {number} pitch - Character pitch rotation (optional)
      */
-    updateWalkingPosition(characterPosition, yaw) {
+    updateWalkingPosition(characterPosition, yaw, pitch = 0) {
         if (this.currentMode !== 'walking') return;
         
-        // Position camera behind character
+        // Position camera behind character with pitch consideration
         const backwardX = Math.sin(yaw) * CAMERA.WALKING_DISTANCE;
         const backwardZ = Math.cos(yaw) * CAMERA.WALKING_DISTANCE;
         
+        // Apply pitch to camera height
+        const pitchHeight = Math.sin(pitch) * CAMERA.WALKING_DISTANCE * 0.5;
+        
         this.camera.position.set(
             characterPosition.x + backwardX,
-            characterPosition.y + CAMERA.WALKING_HEIGHT,
+            characterPosition.y + CAMERA.WALKING_HEIGHT + pitchHeight,
             characterPosition.z + backwardZ
         );
         
-        // Look at character
-        this.camera.lookAt(
-            characterPosition.x,
-            characterPosition.y + 1.5,
-            characterPosition.z
-        );
+        // Look at point adjusted for pitch
+        const lookAtX = characterPosition.x - Math.sin(yaw) * 2;
+        const lookAtY = characterPosition.y + 1.5 - Math.tan(pitch) * 2;
+        const lookAtZ = characterPosition.z - Math.cos(yaw) * 2;
+        
+        this.camera.lookAt(lookAtX, lookAtY, lookAtZ);
     }
     
     /**

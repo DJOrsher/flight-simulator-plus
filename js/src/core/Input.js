@@ -52,6 +52,11 @@ export class Input {
     onKeyDown(event) {
         this.keys[event.code] = true;
         
+        // Debug key detection (disabled to reduce spam)
+        // if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(event.code)) {
+        //     console.log('WASD key detected:', event.code);
+        // }
+        
         // Call registered callbacks
         this.callbacks.keydown.forEach(callback => callback(event, this.keys));
     }

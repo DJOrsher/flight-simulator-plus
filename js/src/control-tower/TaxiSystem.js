@@ -128,10 +128,9 @@ export class TaxiSystem {
         this.groundVehicles.push(tug1, tug2);
         
         console.log(`Created ${this.groundVehicles.length} ground support vehicles`);
-        console.log(`Tug1 position:`, tug1.position);
-        console.log(`Tug2 position:`, tug2.position);
-        console.log(`Tug1 mesh:`, tug1.getMesh() ? 'valid' : 'null');
-        console.log(`Tug2 mesh:`, tug2.getMesh() ? 'valid' : 'null');
+        // Debug vehicle positions (commented to reduce spam)
+        // console.log(`Tug1 position:`, tug1.position);
+        // console.log(`Tug2 position:`, tug2.position);
     }
     
     /**
@@ -458,10 +457,10 @@ export class TaxiSystem {
         this.groundVehicles.forEach((vehicle, index) => {
             vehicle.update(deltaTime);
             
-            // Debug: Log vehicle state occasionally
-            if (Date.now() % 5000 < 100) { // Every 5 seconds
-                console.log(`Vehicle ${index}: state=${vehicle.getState()}, active=${vehicle.isActive}`);
-            }
+            // Debug: Log vehicle state occasionally (disabled to reduce spam)
+            // if (Date.now() % 5000 < 100) { // Every 5 seconds
+            //     console.log(`Vehicle ${index}: state=${vehicle.getState()}, active=${vehicle.isActive}`);
+            // }
             
             // Check if pushback is complete
             if (vehicle.getState() === 'returning') {
