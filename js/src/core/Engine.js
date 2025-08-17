@@ -28,6 +28,7 @@ import { UIManager } from '../ui/UIManager.js';
 // Utilities
 import { WORLD_BOUNDS } from '../utils/Constants.js';
 import * as MathUtils from '../utils/MathUtils.js';
+import { globalCollisionSystem } from '../utils/CollisionSystem.js';
 
 export class Engine {
     constructor() {
@@ -90,6 +91,10 @@ export class Engine {
             
             await this.createAircraft();
             console.log('Aircraft created');
+            
+            // Set up collision detection with aircraft and environment objects
+            this.updateCollisionObjects();
+            console.log('Collision detection configured');
             
             this.controlTower = new ControlTower(this.aircraftList, this.environment);
             console.log('ControlTower initialized');
@@ -155,11 +160,33 @@ export class Engine {
             if (event.code === 'KeyE') {
                 this.handleInteraction();
             }
+            
+            // DEBUG: Direct control tower shortcut (T key)
+            if (event.code === 'KeyT') {
+                console.log('🔧 DEBUG: Direct control tower activation via T key');
+                if (this.gameMode === 'walking') {
+                    this.enterControlTower();
+                } else if (this.gameMode === 'tower') {
+                    this.exitControlTower();
+                }
+            }
         });
         
-        // Mouse lock for camera
+        // Mouse movement handler for different modes
+        this.input.on('mousemove', (event, mouse) => {
+            if (mouse.isLocked) {
+                if (this.gameMode === 'tower') {
+                    // Handle tower camera mouse look
+                    this.camera.updateTowerMouseLook(mouse.deltaX, mouse.deltaY);
+                }
+                // Walking mode mouse look is handled by CharacterController
+                // Flight mode mouse look is handled by flight controls
+            }
+        });
+        
+        // Mouse lock for camera (works in walking and tower modes)
         this.scene.getRenderer().domElement.addEventListener('click', () => {
-            if (this.gameMode === 'walking') {
+            if (this.gameMode === 'walking' || this.gameMode === 'tower') {
                 this.input.requestPointerLock(this.scene.getRenderer().domElement);
             }
         });
@@ -243,14 +270,17 @@ export class Engine {
     exitAircraft() {
         if (!this.currentAircraft) return;
         
-        // Land aircraft safely
+        // Land aircraft immediately and safely
         this.currentAircraft.resetToGround();
         
-        // Position character near aircraft
+        // Position character near aircraft at safe distance
         const aircraftPos = this.currentAircraft.position.clone();
-        aircraftPos.x += 5;
-        aircraftPos.y = 0;
-        aircraftPos.z += 5;
+        const safeDistance = 5; // Meters away from aircraft
+        
+        // Position character to the side of the aircraft (avoiding collision)
+        aircraftPos.x += safeDistance;
+        aircraftPos.y = 0; // Character on ground level
+        aircraftPos.z += safeDistance;
         this.characterController.setPosition(aircraftPos);
         
         // Show character
@@ -261,6 +291,7 @@ export class Engine {
         
         // Reset game mode
         this.gameMode = 'walking';
+        const aircraftType = this.currentAircraft.type;
         this.currentAircraft = null;
         
         // Update UI
@@ -268,8 +299,8 @@ export class Engine {
             position: aircraftPos
         });
         
-        this.uiManager.showNotification('Exited aircraft', 2000, 'info');
-        console.log('Exited aircraft');
+        this.uiManager.showNotification(`Exited ${aircraftType} - aircraft landed safely`, 3000, 'success');
+        console.log(`Exited ${aircraftType} - aircraft landed at ground level`);
     }
     
     /**
@@ -278,8 +309,9 @@ export class Engine {
     enterControlTower() {
         this.gameMode = 'tower';
         
-        // Hide character
+        // Hide character and deactivate character controls
         this.characterController.setVisible(false);
+        this.characterController.setActive(false);
         
         // Switch camera to tower mode
         const towerPosition = this.environment.getControlTowerPosition();
@@ -291,15 +323,17 @@ export class Engine {
         // Update UI
         this.uiManager.updateMode('tower', this.controlTower.getStatus());
         
-        this.uiManager.showNotification('Entered Control Tower', 2000, 'success');
+        this.uiManager.showNotification('Entered Control Tower - Use mouse to look around', 3000, 'success');
+        console.log('Entered control tower, character controller deactivated');
     }
     
     /**
      * Exit control tower
      */
     exitControlTower() {
-        // Show character
+        // Show character and reactivate character controls
         this.characterController.setVisible(true);
+        this.characterController.setActive(true);
         
         // Switch camera back to walking mode
         const characterPos = this.characterController.getPosition();
@@ -311,12 +345,20 @@ export class Engine {
         // Reset game mode
         this.gameMode = 'walking';
         
+        // Re-enable pointer lock for walking mode
+        this.input.exitPointerLock(); // Exit current lock first
+        setTimeout(() => {
+            // Request new pointer lock after brief delay
+            this.input.requestPointerLock(this.scene.getRenderer().domElement);
+        }, 100);
+        
         // Update UI
         this.uiManager.updateMode('walking', {
             position: characterPos
         });
         
-        this.uiManager.showNotification('Exited Control Tower', 2000, 'info');
+        this.uiManager.showNotification('Exited Control Tower - Back to Walking Mode', 2000, 'success');
+        console.log('Exited control tower, character controller reactivated');
     }
     
     /**
@@ -501,6 +543,33 @@ export class Engine {
     }
     
     /**
+     * Update collision objects for all systems
+     */
+    updateCollisionObjects() {
+        const collisionObjects = [...this.aircraftList];
+        
+        // Add ground vehicles to collision objects if they exist
+        if (this.controlTower && this.controlTower.flightAutomation) {
+            const groundVehicles = this.controlTower.flightAutomation.getGroundVehicles();
+            if (groundVehicles && groundVehicles.length > 0) {
+                collisionObjects.push(...groundVehicles);
+            }
+        }
+        
+        // Add environment collision objects (buildings, towers, etc.)
+        if (this.environment) {
+            const environmentObjects = this.environment.getCollisionObjects();
+            if (environmentObjects && environmentObjects.length > 0) {
+                collisionObjects.push(...environmentObjects);
+            }
+        }
+        
+        // Update both character controller and global collision system
+        this.characterController.setCollisionObjects(collisionObjects);
+        globalCollisionSystem.setCollisionObjects(collisionObjects);
+    }
+
+    /**
      * Add ground support vehicles to scene
      */
     addGroundVehiclesToScene() {
@@ -510,6 +579,9 @@ export class Engine {
                 this.scene.add(vehicleMesh);
                 console.log('Added ground support vehicle to scene');
             });
+            
+            // Update collision objects after adding vehicles
+            this.updateCollisionObjects();
         }
     }
 }

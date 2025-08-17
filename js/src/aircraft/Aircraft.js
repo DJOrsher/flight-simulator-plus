@@ -4,6 +4,8 @@
  */
 
 import { AIRCRAFT_SPECS } from '../utils/Constants.js';
+import { stateManager } from '../state/StateManager.js';
+import { eventBus } from '../events/EventBus.js';
 
 export class Aircraft {
     constructor(type, position, rotation = { x: 0, y: 0, z: 0 }) {
@@ -16,6 +18,9 @@ export class Aircraft {
         this.type = type;
         this.mesh = null; // Will be set by the factory
         this.specs = AIRCRAFT_SPECS[type];
+        
+        // Generate unique ID for state management
+        this.id = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
         // Position and rotation
         this.position = new THREE.Vector3(position.x, position.y, position.z);
@@ -31,9 +36,50 @@ export class Aircraft {
         // State properties
         this.isActive = false;
         this.automatedFlight = null;
+        this.isBeingTowed = false; // Track if aircraft is being controlled by ground vehicle
+
+        // Initialize in state manager
+        this.initializeState();
         
         // Initialize aircraft-specific properties
         this.initializeSpecificProperties();
+    }
+
+    /**
+     * Initialize aircraft state in StateManager
+     */
+    initializeState() {
+        stateManager.setState(this.id, {
+            operation: 'parked',
+            phase: 'idle',
+            aircraftType: this.type,
+            position: { ...this.position },
+            rotation: { ...this.rotation },
+            speed: this.speed,
+            isActive: this.isActive,
+            isBeingTowed: this.isBeingTowed,
+            timestamp: Date.now()
+        });
+        
+        console.log(`🏷️ AIRCRAFT: ${this.type} initialized with ID ${this.id}`);
+    }
+
+    /**
+     * Update state in StateManager when properties change
+     */
+    updateState() {
+        const currentState = stateManager.getState(this.id);
+        if (currentState) {
+            stateManager.setState(this.id, {
+                ...currentState,
+                position: { ...this.position },
+                rotation: { ...this.rotation },
+                speed: this.speed,
+                isActive: this.isActive,
+                isBeingTowed: this.isBeingTowed,
+                timestamp: Date.now()
+            });
+        }
     }
 
     /**
@@ -98,6 +144,7 @@ export class Aircraft {
         if (this.mesh) {
             this.mesh.position.copy(this.position);
         }
+        this.updateState();
     }
 
     /**
@@ -111,6 +158,7 @@ export class Aircraft {
         if (this.mesh) {
             this.mesh.rotation.set(x, y, z);
         }
+        this.updateState();
     }
 
     /**
@@ -151,15 +199,39 @@ export class Aircraft {
     }
 
     /**
-     * Reset aircraft to ground state
+     * Reset aircraft to ground state with immediate landing
      */
     resetToGround() {
         this.speed = 0;
         this.velocity.set(0, 0, 0);
-        this.rotation.z = 0; // Level aircraft
-        this.position.y = this.getMinimumFlightHeight();
+        this.rotation.x = 0; // Level pitch
+        this.rotation.z = 0; // Level roll
+        
+        // Land aircraft on ground (y = 1 for standard ground clearance)
+        this.position.y = 1;
+        
         this.isActive = false;
         this.automatedFlight = null;
+        this.isBeingTowed = false;
+        
+        // Update mesh position immediately if it exists
+        if (this.mesh) {
+            this.mesh.position.copy(this.position);
+            this.mesh.rotation.set(this.rotation.x, this.rotation.y, this.rotation.z);
+        }
+
+        // Update state to parked
+        stateManager.setState(this.id, {
+            operation: 'parked',
+            phase: 'idle',
+            aircraftType: this.type,
+            position: { ...this.position },
+            rotation: { ...this.rotation },
+            speed: this.speed,
+            isActive: this.isActive,
+            isBeingTowed: this.isBeingTowed,
+            timestamp: Date.now()
+        });
     }
 
     /**
@@ -217,5 +289,8 @@ export class Aircraft {
             this.mesh.parent.remove(this.mesh);
         }
         this.mesh = null;
+        
+        // Remove from state manager
+        stateManager.removeAircraft(this.id);
     }
 }
